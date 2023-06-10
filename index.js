@@ -37,7 +37,8 @@ http.listen(PORT, () => {
 http.keepAliveTimeout = 120 * 1000;
 http.headersTimeout = 120 * 1000;
 
-let activeUsers = [];
+let activeUsers = new Set();
+let activeUsersMap = new Map();
 let activeSocketId = [];
 
 socketIO.use((socket, next) => {
@@ -67,8 +68,6 @@ socketIO.on('connection', (socket) => {
     var roomNum = "";
 
     socket.on('joinRoom', (data) => {
-      // socketIO.join()
-      // console.log(data.roomNum);
       roomNum = `${data.room}`;
       socket.join(roomNum);
       console.log(`successfully joined: ${roomNum}`);
@@ -87,19 +86,22 @@ socketIO.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
       const id = socket.id
+      var indexLocation = activeSocketId.indexOf(id);
+      console.log('Location', indexLocation);
+      activeUsers.delete(indexLocation);
+      console.log(activeUsers);
       console.log(`${id} disconnected`);
       socket.disconnect();
     });
 });
 
 app.post('/api/updateCurrentUsers', (req, res) => {
-  var { userId } = req.body;
-  activeUsers.push(userId);
+  var { userId, userSocketId } = req.body;
+  activeUsersMap.set(userSocketId, userId);
   res.status(200).send("Success")
 })
 
 app.get('/api/currentUsers', (req, res) => {
-  res.json({
-    data: activeUsers,
-  });
+  console.log(activeUsersMap.values)
+  res.status(200).send("Success");
 });
