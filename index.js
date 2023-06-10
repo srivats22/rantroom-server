@@ -78,6 +78,7 @@ socketIO.on('connection', (socket) => {
         data,
         roomNum: data.roomNum
       };
+      console.log(message)
       socketIO.to(roomNum).emit('messageResponse', data);
       messageStore.saveMessage(message);
     });
