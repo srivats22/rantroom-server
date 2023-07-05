@@ -37,7 +37,8 @@ http.listen(PORT, () => {
 http.keepAliveTimeout = 120 * 1000;
 http.headersTimeout = 120 * 1000;
 
-let activeUsers = new Set();
+let activeUsers = [];
+let chattingMap = new Map();
 let activeUsersMap = new Map();
 let activeSocketId = [];
 
@@ -97,12 +98,40 @@ socketIO.on('connection', (socket) => {
 });
 
 app.post('/api/updateCurrentUsers', (req, res) => {
-  var { userId, userSocketId } = req.body;
-  activeUsersMap.set(userSocketId, userId);
-  res.status(200).send("Success")
+  var { userId } = req.body;
+  if(!activeUsers.includes(userId)){
+    activeUsers.push(userId);
+  }
 })
 
 app.get('/api/currentUsers', (req, res) => {
-  console.log(activeUsersMap.values)
-  res.status(200).send("Success");
+  res.status(200).send({data: activeUsers});
 });
+
+app.post('/api/updateUsersStatus', (req, res) => {
+  var { userId } = req.body;
+  // map has user's uid
+  if(chattingMap.has(userId)){
+    // change chatting to not-chatting
+    if(chattingMap.get(userId) === 'chatting'){
+      chattingMap.set(userId, 'not-chatting');
+      res.status(200).send("Success");
+    }
+    // change not chatting to chatting
+    else{
+      chattingMap.set(userId, 'chatting');
+      res.status(200).send("Success");
+    }
+  }
+  else{
+    chattingMap.set(userId, 'chatting');
+    res.status(200).send("Success");
+  }
+})
+
+app.get('/api/getUserStatus', (req, res) => {
+  var { userId } = req.body;
+  res.status(200).send({
+    data: chattingMap.get(userId),
+  })
+})
